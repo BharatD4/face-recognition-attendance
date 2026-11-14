@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+*.pyo
+TrainingImage/
+psd.txt.lnk
+*.lnk
