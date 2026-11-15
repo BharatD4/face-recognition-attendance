@@ -9,7 +9,7 @@ import datetime
 import time
 
 # ─────────────────────────────────────────────────────────────
-# PAGE CONFIGURATION (Clean Light SaaS Theme)
+# PAGE CONFIGURATION (Mobile & Desktop Responsive)
 # ─────────────────────────────────────────────────────────────
 st.set_page_config(
     page_title="FaceAttend AI | Smart Biometric Attendance",
@@ -172,7 +172,7 @@ def load_attendance_today():
     return pd.DataFrame()
 
 # ─────────────────────────────────────────────────────────────
-# MODERN LIGHT SAAS CSS STYLING
+# RESPONSIVE MOBILE & DESKTOP CSS STYLING
 # ─────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
@@ -188,6 +188,22 @@ st.markdown("""
         background-color: #f8fafc;
     }
 
+    /* Mobile Container Optimization */
+    @media (max-width: 768px) {
+        .block-container {
+            padding-top: 1rem !important;
+            padding-bottom: 2rem !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+        }
+        div[data-testid="column"] {
+            width: 100% !important;
+            flex: 1 1 100% !important;
+            min-width: 100% !important;
+            margin-bottom: 1rem !important;
+        }
+    }
+
     /* Top Navigation Header */
     .saas-header {
         display: flex;
@@ -198,7 +214,7 @@ st.markdown("""
         border-radius: 14px;
         border: 1px solid #e2e8f0;
         margin-bottom: 1.25rem;
-        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05);
     }
     .brand-group {
         display: flex;
@@ -217,6 +233,7 @@ st.markdown("""
         justify-content: center;
         border-radius: 10px;
         box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
+        flex-shrink: 0;
     }
     .brand-title {
         font-size: 1.35rem;
@@ -243,6 +260,7 @@ st.markdown("""
         font-size: 0.84rem;
         color: #334155;
         font-weight: 600;
+        flex-shrink: 0;
     }
     .dot-live {
         width: 9px;
@@ -252,35 +270,57 @@ st.markdown("""
         box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
     }
 
-    /* Light Theme Tabs (Segmented Controls) */
-    .stTabs [data-baseweb="tab-list"] {
-        gap: 8px;
-        background-color: #f1f5f9;
-        padding: 5px;
-        border-radius: 12px;
-        border: 1px solid #e2e8f0;
-        margin-bottom: 1.5rem;
+    /* Mobile Header Stacking */
+    @media (max-width: 640px) {
+        .saas-header {
+            flex-direction: column !important;
+            align-items: flex-start !important;
+            padding: 1rem !important;
+            gap: 12px !important;
+        }
+        .status-capsule {
+            width: 100% !important;
+            justify-content: space-between !important;
+            box-sizing: border-box !important;
+        }
+        .brand-title {
+            font-size: 1.2rem !important;
+        }
+        .brand-desc {
+            font-size: 0.75rem !important;
+        }
     }
-    .stTabs [data-baseweb="tab"] {
-        height: 40px;
-        padding: 0 22px;
-        border-radius: 8px;
-        color: #64748b;
-        font-weight: 600;
-        font-size: 0.88rem;
-        background: transparent;
-        border: none;
-        transition: all 0.15s ease;
+
+    /* Responsive KPI Grid Container (Desktop: 4 Col, Mobile/Tablet: 2 Col) */
+    .kpi-grid-container {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 16px;
+        margin-bottom: 1.25rem;
     }
-    .stTabs [data-baseweb="tab"]:hover {
-        color: #0f172a;
-        background-color: rgba(255, 255, 255, 0.6);
+    @media (max-width: 900px) {
+        .kpi-grid-container {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
     }
-    .stTabs [aria-selected="true"] {
-        background-color: #ffffff !important;
-        color: #2563eb !important;
-        font-weight: 700;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06) !important;
+    @media (max-width: 480px) {
+        .kpi-grid-container {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        .card-kpi {
+            padding: 0.9rem !important;
+        }
+        .card-kpi-val {
+            font-size: 1.55rem !important;
+        }
+        .card-kpi-label {
+            font-size: 0.68rem !important;
+        }
+        .card-kpi-sub {
+            font-size: 0.72rem !important;
+        }
     }
 
     /* Light KPI Cards */
@@ -318,12 +358,71 @@ st.markdown("""
         font-weight: 500;
     }
 
-    /* Dynamic Verification Banner (Clean Light Cards) */
+    /* Light Theme Swipeable Tabs for Mobile */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 6px;
+        background-color: #f1f5f9;
+        padding: 5px;
+        border-radius: 12px;
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1.25rem;
+        overflow-x: auto !important;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
+        display: none;
+    }
+    .stTabs [data-baseweb="tab"] {
+        height: 40px;
+        padding: 0 18px;
+        border-radius: 8px;
+        color: #64748b;
+        font-weight: 600;
+        font-size: 0.88rem;
+        background: transparent;
+        border: none;
+        flex-shrink: 0 !important;
+        transition: all 0.15s ease;
+    }
+    .stTabs [data-baseweb="tab"]:hover {
+        color: #0f172a;
+        background-color: rgba(255, 255, 255, 0.6);
+    }
+    .stTabs [aria-selected="true"] {
+        background-color: #ffffff !important;
+        color: #2563eb !important;
+        font-weight: 700;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06) !important;
+    }
+
+    @media (max-width: 640px) {
+        .stTabs [data-baseweb="tab"] {
+            padding: 0 12px !important;
+            font-size: 0.8rem !important;
+            height: 38px !important;
+        }
+    }
+
+    /* Mobile Camera Widget Styling */
+    [data-testid="stCameraInput"] {
+        width: 100% !important;
+    }
+    [data-testid="stCameraInput"] video {
+        width: 100% !important;
+        max-width: 100% !important;
+        border-radius: 10px !important;
+        object-fit: cover !important;
+    }
+
+    /* Dynamic Verification Banner */
     .banner-success-card {
         background: #f0fdf4;
         border: 1.5px solid #86efac;
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1.35rem;
         box-shadow: 0 2px 8px rgba(34, 197, 94, 0.08);
     }
     .badge-success-pill {
@@ -336,13 +435,13 @@ st.markdown("""
         border-radius: 6px;
         background: #10b981;
         color: #ffffff;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.65rem;
     }
     .banner-warning-card {
         background: #fff1f2;
         border: 1.5px solid #fecdd3;
         border-radius: 12px;
-        padding: 1.5rem;
+        padding: 1.35rem;
         box-shadow: 0 2px 8px rgba(244, 63, 94, 0.08);
     }
     .badge-warning-pill {
@@ -355,20 +454,21 @@ st.markdown("""
         border-radius: 6px;
         background: #e11d48;
         color: #ffffff;
-        margin-bottom: 0.75rem;
+        margin-bottom: 0.65rem;
     }
     .student-title-lg {
-        font-size: 1.7rem;
+        font-size: 1.6rem;
         font-weight: 800;
         color: #0f172a;
         margin: 0 0 0.5rem 0;
+        line-height: 1.2;
     }
     .meta-row-light {
         display: grid;
         grid-template-columns: repeat(3, 1fr);
         gap: 12px;
         background: #ffffff;
-        padding: 14px;
+        padding: 12px 14px;
         border-radius: 8px;
         border: 1px solid #dcfce7;
         margin-top: 1rem;
@@ -381,10 +481,21 @@ st.markdown("""
         font-weight: 700;
     }
     .meta-val-light {
-        font-size: 1rem;
+        font-size: 0.98rem;
         color: #0f172a;
         font-weight: 700;
         font-family: 'JetBrains Mono', monospace;
+    }
+
+    @media (max-width: 600px) {
+        .meta-row-light {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 10px !important;
+            padding: 10px !important;
+        }
+        .student-title-lg {
+            font-size: 1.35rem !important;
+        }
     }
 
     /* Standby Light Card */
@@ -392,7 +503,7 @@ st.markdown("""
         border: 1.5px dashed #cbd5e1;
         background: #ffffff;
         border-radius: 12px;
-        padding: 2.75rem 1.5rem;
+        padding: 2.25rem 1.25rem;
         text-align: center;
         color: #64748b;
     }
@@ -410,28 +521,17 @@ st.markdown("""
         margin-bottom: 1.25rem;
     }
 
-    /* Primary Buttons */
-    div.stButton > button:first-child {
-        background: #2563eb;
-        color: #ffffff;
-        border: none;
-        border-radius: 8px;
-        font-weight: 600;
-        padding: 0.55rem 1.35rem;
-        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
-        transition: background 0.15s ease, transform 0.1s ease;
+    /* Primary Buttons & Mobile Touch Target */
+    div.stButton > button {
+        border-radius: 8px !important;
+        font-weight: 600 !important;
+        min-height: 44px !important;
+        transition: transform 0.1s ease;
     }
-    div.stButton > button:first-child:hover {
-        background: #1d4ed8;
-        color: #ffffff;
-        transform: translateY(-1px);
-    }
-    
-    /* Secondary/Reset Buttons */
-    div.stButton > button[kind="secondary"] {
-        background: #ffffff;
-        color: #334155;
-        border: 1px solid #cbd5e1;
+    @media (max-width: 768px) {
+        div.stButton > button {
+            width: 100% !important;
+        }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -448,12 +548,12 @@ st.markdown(f"""
         <div class="brand-icon-box">FA</div>
         <div>
             <h1 class="brand-title">FaceAttend AI</h1>
-            <p class="brand-desc">Enterprise Biometric Attendance & Identity Verification</p>
+            <p class="brand-desc">Enterprise Biometric Attendance System</p>
         </div>
     </div>
     <div class="status-capsule">
         <span class="dot-live"></span>
-        <span>System Active</span>
+        <span>Online</span>
         <span style="color:#cbd5e1;">|</span>
         <span style="font-family:'JetBrains Mono',monospace; color:#0f172a;">{today_date_str}</span>
     </div>
@@ -461,62 +561,47 @@ st.markdown(f"""
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
-# DYNAMIC KPI SUMMARY BANNER (Always Visible at a Glance)
+# RESPONSIVE KPI BANNER (Desktop: 4-Col, Mobile: 2x2 Grid)
 # ─────────────────────────────────────────────────────────────
 total_enrolled = total_registrations()
 today_attendance_df = load_attendance_today()
 today_count = len(today_attendance_df)
 attendance_rate_val = (today_count / total_enrolled * 100) if total_enrolled > 0 else 0
-model_status_text = "LBPH Active" if os.path.isfile(TRAINER_YML) else "Pending Training"
+model_status_text = "LBPH Active" if os.path.isfile(TRAINER_YML) else "Pending"
 
-kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
-
-with kpi_col1:
-    st.markdown(f"""
+st.markdown(f"""
+<div class="kpi-grid-container">
     <div class="card-kpi">
         <div class="card-kpi-label">Total Students</div>
         <div class="card-kpi-val">{total_enrolled}</div>
         <div class="card-kpi-sub">Enrolled Profiles</div>
     </div>
-    """, unsafe_allow_html=True)
-
-with kpi_col2:
-    st.markdown(f"""
     <div class="card-kpi">
         <div class="card-kpi-label">Checked-In Today</div>
         <div class="card-kpi-val" style="color:#2563eb;">{today_count}</div>
         <div class="card-kpi-sub">Verified Records</div>
     </div>
-    """, unsafe_allow_html=True)
-
-with kpi_col3:
-    st.markdown(f"""
     <div class="card-kpi">
         <div class="card-kpi-label">Today's Turnout</div>
         <div class="card-kpi-val" style="color:#10b981;">{attendance_rate_val:.1f}%</div>
         <div class="card-kpi-sub">Attendance Rate</div>
     </div>
-    """, unsafe_allow_html=True)
-
-with kpi_col4:
-    st.markdown(f"""
     <div class="card-kpi">
         <div class="card-kpi-label">Recognition Engine</div>
-        <div class="card-kpi-val" style="font-size:1.45rem; color:#059669;">{model_status_text}</div>
+        <div class="card-kpi-val" style="font-size:1.35rem; color:#059669;">{model_status_text}</div>
         <div class="card-kpi-sub">Haar + LBPH Model</div>
     </div>
-    """, unsafe_allow_html=True)
-
-st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
+</div>
+""", unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
-# TABS INTERFACE (Clean Segmented Light Layout)
+# TABS INTERFACE (Mobile Swipeable Segmented Control)
 # ─────────────────────────────────────────────────────────────
 tab_scanner, tab_enroll, tab_logs, tab_students = st.tabs([
-    "📸 Live Attendance Scanner",
-    "➕ Student Enrollment",
-    "📋 Today's Attendance Logs",
-    "👥 Student Directory & Records"
+    "📸 Live Attendance",
+    "➕ Enroll Student",
+    "📋 Today's Logs",
+    "👥 Directory & History"
 ])
 
 # ═════════════════════════════════════════════════════════════
@@ -524,18 +609,18 @@ tab_scanner, tab_enroll, tab_logs, tab_students = st.tabs([
 # ═════════════════════════════════════════════════════════════
 with tab_scanner:
     if not os.path.isfile(TRAINER_YML) or not os.path.isfile(STUDENT_CSV):
-        st.warning("⚠️ No facial biometric model found. Please enroll at least 1 student in the **Student Enrollment** tab.")
+        st.warning("⚠️ No facial biometric model found. Please enroll at least 1 student in the **Enroll Student** tab.")
 
-    col_cam_box, col_verify_box = st.columns([1.1, 0.9], gap="large")
+    col_cam_box, col_verify_box = st.columns([1.1, 0.9], gap="medium")
 
     with col_cam_box:
         st.markdown('<div class="section-headline">Optical Biometric Scanner</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-caption">Position face in center frame and click shutter to log attendance.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-caption">Align face within frame. Tap "Take photo" to verify.</div>', unsafe_allow_html=True)
         camera_frame = st.camera_input("Optical Scanner", label_visibility="collapsed")
 
     with col_verify_box:
         st.markdown('<div class="section-headline">Verification Result</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-caption">Automated face recognition and attendance logging.</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-caption">Real-time facial identity match and attendance record.</div>', unsafe_allow_html=True)
 
         if camera_frame is not None:
             raw_bytes = np.frombuffer(camera_frame.getvalue(), np.uint8)
@@ -548,8 +633,8 @@ with tab_scanner:
                 st.markdown("""
                 <div class="banner-warning-card">
                     <span class="badge-warning-pill">NO FACE DETECTED</span>
-                    <div class="student-title-lg" style="font-size:1.3rem;">Face Not Detected</div>
-                    <div style="color:#64748b; font-size:0.88rem; margin-top:0.4rem;">
+                    <div class="student-title-lg" style="font-size:1.25rem;">Face Not Detected</div>
+                    <div style="color:#64748b; font-size:0.85rem; margin-top:0.4rem;">
                         Please stand directly in front of the camera with adequate lighting and retake the photo.
                     </div>
                 </div>
@@ -580,7 +665,7 @@ with tab_scanner:
                                 <div class="meta-val-light">{log_time}</div>
                             </div>
                             <div>
-                                <div class="meta-label-light">Match Confidence</div>
+                                <div class="meta-label-light">Confidence</div>
                                 <div class="meta-val-light" style="color:#10b981;">{confidence_pct}%</div>
                             </div>
                         </div>
@@ -591,23 +676,23 @@ with tab_scanner:
                     st.markdown("""
                     <div class="banner-warning-card">
                         <span class="badge-warning-pill">UNRECOGNIZED IDENTITY</span>
-                        <div class="student-title-lg" style="font-size:1.3rem;">Student Not In Database</div>
-                        <div style="color:#64748b; font-size:0.88rem; margin-top:0.4rem;">
-                            This face does not match any registered student profile. Please enroll via the Student Enrollment tab.
+                        <div class="student-title-lg" style="font-size:1.25rem;">Student Not In Database</div>
+                        <div style="color:#64748b; font-size:0.85rem; margin-top:0.4rem;">
+                            This face does not match any registered student profile. Please enroll via the Enroll Student tab.
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
         else:
             st.markdown("""
             <div class="standby-card-light">
-                <div style="font-size:2.5rem; margin-bottom:0.75rem;">📷</div>
-                <div style="font-weight:700; color:#0f172a; font-size:1rem; margin-bottom:0.35rem;">Awaiting Shutter Capture</div>
-                <div style="font-size:0.85rem; color:#64748b;">Click "Take photo" on the camera feed to authenticate.</div>
+                <div style="font-size:2.2rem; margin-bottom:0.5rem;">📷</div>
+                <div style="font-weight:700; color:#0f172a; font-size:0.95rem; margin-bottom:0.25rem;">Awaiting Shutter Capture</div>
+                <div style="font-size:0.82rem; color:#64748b;">Tap "Take photo" on the camera feed to authenticate.</div>
             </div>
             """, unsafe_allow_html=True)
 
     # Real-Time Check-In Feed
-    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
     st.markdown('<div class="section-headline">Real-Time Check-In Stream</div>', unsafe_allow_html=True)
     
     current_log_df = load_attendance_today()
@@ -618,19 +703,20 @@ with tab_scanner:
             label="📥 Export Today's Attendance (CSV)",
             data=csv_download_bytes,
             file_name=f"Attendance_{datetime.datetime.now().strftime('%d_%m_%Y')}.csv",
-            mime="text/csv"
+            mime="text/csv",
+            use_container_width=True
         )
     else:
         st.info("No check-ins logged for today yet. When students scan their face, records will appear here dynamically.")
 
 # ═════════════════════════════════════════════════════════════
-# TAB 2: STUDENT ENROLLMENT (Interactive Registration)
+# TAB 2: STUDENT ENROLLMENT (Registration)
 # ═════════════════════════════════════════════════════════════
 with tab_enroll:
     st.markdown('<div class="section-headline">Biometric Registration & Model Training</div>', unsafe_allow_html=True)
     st.markdown('<div class="section-caption">Add new student profiles and train OpenCV facial recognition model.</div>', unsafe_allow_html=True)
 
-    col_details, col_phototake = st.columns([1, 1], gap="large")
+    col_details, col_phototake = st.columns([1, 1], gap="medium")
 
     with col_details:
         st.markdown("##### 1. Student Information")
@@ -678,7 +764,7 @@ with tab_enroll:
                 st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
                 btn_c1, btn_c2 = st.columns(2)
                 with btn_c1:
-                    if st.button("💾 Enroll & Train Biometric Model", type="primary", use_container_width=True):
+                    if st.button("💾 Enroll & Train Model", type="primary", use_container_width=True):
                         serial_id = next_serial()
                         save_student(serial_id, new_sid, new_sname)
                         with st.spinner("Training facial recognition network with new biometric data..."):
@@ -703,19 +789,15 @@ with tab_logs:
 
     logs_df = load_attendance_today()
     if not logs_df.empty:
-        c_count, c_export = st.columns([1, 1])
-        with c_count:
-            st.markdown(f"**Total Records:** `{len(logs_df)} check-ins logged today`")
-        with c_export:
-            csv_data = logs_df.to_csv(index=False).encode("utf-8")
-            st.download_button(
-                label="📥 Download Daily CSV",
-                data=csv_data,
-                file_name=f"Attendance_{datetime.datetime.now().strftime('%d_%m_%Y')}.csv",
-                mime="text/csv",
-                use_container_width=True
-            )
-
+        st.markdown(f"**Total Records:** `{len(logs_df)} check-ins logged today`")
+        csv_data = logs_df.to_csv(index=False).encode("utf-8")
+        st.download_button(
+            label="📥 Download Daily CSV",
+            data=csv_data,
+            file_name=f"Attendance_{datetime.datetime.now().strftime('%d_%m_%Y')}.csv",
+            mime="text/csv",
+            use_container_width=True
+        )
         st.dataframe(logs_df, use_container_width=True, hide_index=True)
     else:
         st.info("No attendance records logged for today yet.")
@@ -761,9 +843,9 @@ with tab_students:
 # ─────────────────────────────────────────────────────────────
 # FOOTER
 # ─────────────────────────────────────────────────────────────
-st.markdown("<div style='height:45px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:35px;'></div>", unsafe_allow_html=True)
 st.markdown("""
-<div style="text-align:center; color:#94a3b8; font-size:0.8rem; border-top:1px solid #e2e8f0; padding-top:1.5rem;">
+<div style="text-align:center; color:#94a3b8; font-size:0.75rem; border-top:1px solid #e2e8f0; padding-top:1.25rem;">
     FaceAttend AI • Enterprise Biometric Attendance Architecture • Powered by OpenCV LBPH & Streamlit
 </div>
 """, unsafe_allow_html=True)
