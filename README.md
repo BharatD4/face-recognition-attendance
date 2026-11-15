@@ -15,9 +15,7 @@
 ### 🌐 1. Live Web Application (Cloud Hosted)
 Access the live deployed system on Streamlit Cloud directly from your phone or PC browser:
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://face-recognition-attendance-yhkfvrc6oelnzatkpz4cl7.streamlit.app)
-
-👉 **[Launch Live Cloud Attendance System](https://face-recognition-attendance-yhkfvrc6oelnzatkpz4cl7.streamlit.app)**
+https://face-recognition-attendance-yhkfvrc6nelnzatkpz4cl7.streamlit.app/
 
 ---
 
