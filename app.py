@@ -36,6 +36,9 @@ def load_students():
     if os.path.isfile(STUDENT_CSV):
         try:
             df = pd.read_csv(STUDENT_CSV)
+            # drop empty / Unnamed columns
+            df = df.loc[:, ~df.columns.str.contains('^Unnamed', na=False)]
+            df = df.loc[:, [c for c in df.columns if str(c).strip() != '']]
             df.columns = df.columns.str.strip()
             return df
         except Exception:
@@ -125,7 +128,11 @@ def load_attendance_today():
     file = os.path.join(ATTENDANCE_DIR, f"Attendance_{today}.csv")
     if os.path.isfile(file):
         try:
-            return pd.read_csv(file)
+            df = pd.read_csv(file)
+            df = df.loc[:, ~df.columns.str.contains('^Unnamed', na=False)]
+            df = df.loc[:, [c for c in df.columns if str(c).strip() != '']]
+            df.columns = df.columns.str.strip()
+            return df
         except Exception:
             return pd.DataFrame()
     return pd.DataFrame()
@@ -190,20 +197,24 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ───────────────────────── SIDEBAR NAV ─────────────────────────
+# ───────────────────────── NAVIGATION (TOP & SIDEBAR) ─────────────────────────
+nav_options = ["✅ Take Attendance", "📸 Register New Student", "📊 Attendance Records", "🏠 Dashboard"]
+
+page = st.radio(
+    "Choose Section",
+    nav_options,
+    index=0,
+    horizontal=True,
+    label_visibility="collapsed"
+)
+
 with st.sidebar:
-    st.markdown("## 📋 Navigation")
-    page = st.radio(
-        "Go to",
-        ["🏠 Dashboard", "📸 Register New Student", "✅ Take Attendance", "📊 Attendance Records"],
-        label_visibility="collapsed",
-    )
-    st.markdown("---")
+    st.markdown("## 📋 Quick Stats")
     st.markdown(f"**Total Registered:** {total_registrations()}")
     st.markdown(f"**Date:** {datetime.datetime.now().strftime('%d %b %Y')}")
     st.markdown(f"**Time:** {datetime.datetime.now().strftime('%H:%M:%S')}")
     st.markdown("---")
-    st.info("📌 Steps:\n1. Register student\n2. Train model\n3. Take attendance")
+    st.info("📌 **How to use:**\n1. Go to **Take Attendance** to scan face.\n2. Go to **Register** to add new students.\n3. Go to **Records** to download CSV.")
 
 # ════════════════════════════════════════════════════════════════
 # PAGE 1: DASHBOARD

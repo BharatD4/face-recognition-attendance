@@ -6,12 +6,12 @@ A smart attendance system using **OpenCV LBPH Face Recognition** with a modern *
 
 ## 🚀 Live Demo & 1-Click Launch
 
-### 🌐 Option 1: Live Cloud Demo (Open in Browser)
-Click the badge or link below to launch the live web application directly in your browser:
+### 🌐 Option 1: Live Cloud App (Direct Browser Link)
+Click the badge or link below to open the live deployed attendance system directly:
 
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=BharatD4/face-recognition-attendance&branch=master&mainModule=app.py)
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://face-recognition-attendance-yhkfvrc6oelnzatkpz4cl7.streamlit.app)
 
-👉 **[🔗 Click Here to Open Live Web App](https://share.streamlit.io/deploy?repository=BharatD4/face-recognition-attendance&branch=master&mainModule=app.py)**
+👉 **[🔗 Click Here to Open Live Attendance System](https://face-recognition-attendance-yhkfvrc6oelnzatkpz4cl7.streamlit.app)**
 
 ---
 
