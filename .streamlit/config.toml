@@ -9,3 +9,4 @@ font = "sans serif"
 maxUploadSize = 10
 enableCORS = false
 enableXsrfProtection = false
+

@@ -476,3 +476,4 @@ st.markdown(
     "<center style='color:#666;font-size:0.85rem;'>🎓 Face Recognition Attendance System | Built with OpenCV + Streamlit</center>",
     unsafe_allow_html=True
 )
+

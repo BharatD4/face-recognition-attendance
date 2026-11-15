@@ -1,59 +1,80 @@
 # 🎓 Face Recognition Based Attendance Monitoring System
 
-A smart attendance system using **OpenCV LBPH Face Recognition** with a modern **Streamlit** web interface. Students can be registered via webcam, the model is trained on-the-fly, and attendance is taken automatically by recognizing faces.
+A smart attendance system using **OpenCV LBPH Face Recognition** with a modern **Streamlit** web interface and original desktop GUI. Students can be registered via webcam, the model is trained on-the-fly, and attendance is recorded automatically by recognizing faces.
 
-## 🚀 Live Demo
-[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://your-app.streamlit.app)
+---
 
-## ✨ Features
-- 📸 **Register Students** via browser webcam
-- 🤖 **Train Model** automatically with OpenCV LBPH
-- ✅ **Take Attendance** by face recognition in browser
-- 📊 **View & Download** attendance records as CSV
-- 🎨 **Modern Dark UI** with real-time stats dashboard
+## 🚀 Live Demo & 1-Click Launch
+
+### 🌐 Option 1: Live Cloud Demo (Open in Browser)
+Click the badge or link below to launch the live web application directly in your browser:
+
+[![Open in Streamlit](https://static.streamlit.io/badges/streamlit_badge_black_white.svg)](https://share.streamlit.io/deploy?repository=BharatD4/face-recognition-attendance&branch=master&mainModule=app.py)
+
+👉 **[🔗 Click Here to Open Live Web App](https://share.streamlit.io/deploy?repository=BharatD4/face-recognition-attendance&branch=master&mainModule=app.py)**
+
+---
+
+### 💻 Option 2: 1-Click Desktop Launcher (Local)
+Double-click `Launch_Attendance_System.bat` in the project folder to instantly start the application without typing commands.
+
+---
+
+## ✨ Key Features
+- 📸 **Register Students:** Capture face photos directly via webcam
+- 🤖 **Train Model:** Train OpenCV LBPH recognizer with a single click
+- ✅ **Take Attendance:** Real-time face recognition and attendance logging
+- 📊 **Attendance Records:** View and export daily attendance to CSV
+- 🎨 **Modern UI:** Responsive dashboard with live statistics
+
+---
 
 ## 🛠️ Tech Stack
-| Tool | Purpose |
-|------|---------|
-| OpenCV (LBPH) | Face detection & recognition |
-| Streamlit | Web UI |
-| Pillow, NumPy | Image processing |
-| Pandas | Attendance CSV management |
-| Haar Cascade | Face detection |
+| Component | Technology |
+|---|---|
+| **Face Recognition** | OpenCV (Haar Cascade + LBPH) |
+| **Web Interface** | Streamlit |
+| **Desktop GUI** | Tkinter |
+| **Data Processing** | Pandas & NumPy |
+| **Image Processing** | Pillow (PIL) |
+
+---
 
 ## 🏃 Run Locally
 
-### Web App (Streamlit)
+### 1. Web App (Streamlit)
 ```bash
 pip install -r requirements.txt
 streamlit run app.py
 ```
 
-### Desktop GUI (Tkinter original)
+### 2. Desktop GUI (Tkinter)
 ```bash
 pip install opencv-contrib-python pandas pillow
 python main.py
 ```
 
+---
+
 ## 📁 Project Structure
 ```
-├── app.py                              ← Streamlit web app
-├── main.py                             ← Original Tkinter desktop app
-├── requirements.txt                    ← Python dependencies
-├── haarcascade_frontalface_default.xml ← Face detector model
+├── app.py                              # Streamlit web application
+├── main.py                             # Tkinter desktop application
+├── Launch_Attendance_System.bat        # 1-Click launcher
+├── requirements.txt                    # Python dependencies
+├── packages.txt                        # System dependencies for cloud
+├── haarcascade_frontalface_default.xml # Haar Cascade face detector
 ├── StudentDetails/
-│   └── StudentDetails.csv             ← Registered students
-├── TrainingImage/                      ← Face images for training
+│   └── StudentDetails.csv             # Registered students database
+├── TrainingImage/                      # Captured face images
 ├── TrainingImageLabel/
-│   └── Trainner.yml                   ← Trained LBPH model
+│   └── Trainner.yml                   # Trained LBPH face model
 └── Attendance/
-    └── Attendance_DD-MM-YYYY.csv      ← Daily attendance files
+    └── Attendance_DD-MM-YYYY.csv      # Daily attendance logs
 ```
 
-## 🔄 How It Works
-1. **Register** → Enter ID & Name → Capture 5 face photos via webcam
-2. **Train** → Click "Save Profile" → LBPH model trains automatically
-3. **Attend** → Go to "Take Attendance" → Look at camera → Marked ✅
+---
 
 ## 👨‍💻 Author
-Bharat Dewangan
+**Bharat Dewangan**  
+GitHub: [@BharatD4](https://github.com/BharatD4)
