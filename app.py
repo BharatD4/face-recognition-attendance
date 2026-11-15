@@ -9,17 +9,17 @@ import datetime
 import time
 
 # ─────────────────────────────────────────────────────────────
-# PAGE CONFIGURATION (Modern Enterprise Theme)
+# PAGE CONFIGURATION (Clean Light SaaS Theme)
 # ─────────────────────────────────────────────────────────────
 st.set_page_config(
-    page_title="FaceAttend AI | Biometric Attendance System",
+    page_title="FaceAttend AI | Smart Biometric Attendance",
     page_icon="🛡️",
     layout="wide",
     initial_sidebar_state="collapsed"
 )
 
 # ─────────────────────────────────────────────────────────────
-# PATHS & SETUP
+# PATHS & DIRECTORY SETUP
 # ─────────────────────────────────────────────────────────────
 HAAR = "haarcascade_frontalface_default.xml"
 STUDENT_CSV = os.path.join("StudentDetails", "StudentDetails.csv")
@@ -44,7 +44,6 @@ def load_students():
             df = df.loc[:, ~df.columns.str.contains('^Unnamed', na=False)]
             df = df.loc[:, [c for c in df.columns if str(c).strip() != '']]
             df.columns = df.columns.str.strip()
-            # Standardize column naming
             rename_map = {}
             for col in df.columns:
                 c_upper = col.upper()
@@ -103,39 +102,33 @@ def train_model():
     return True, len(set(ids))
 
 def recognize_primary_face(gray_img):
-    """
-    Detects faces, prioritizes the primary (largest foreground) face,
-    and returns recognized identity to avoid background false positives.
-    """
     if not os.path.isfile(TRAINER_YML):
         return None, []
     recognizer = cv2.face.LBPHFaceRecognizer_create()
     recognizer.read(TRAINER_YML)
     det = detector()
     
-    # Min size of 80x80 prevents background clutter from triggering false alerts
+    # 80x80 minSize prevents tiny background noise from registering as false faces
     faces = det.detectMultiScale(gray_img, scaleFactor=1.15, minNeighbors=5, minSize=(80, 80))
     if len(faces) == 0:
         return faces, []
 
-    # Sort faces by bounding box area (largest foreground face first)
+    # Sort faces by area descending (largest foreground face evaluated first)
     faces = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)
     df = load_students()
 
     results = []
-    # Evaluate the primary foreground face first
     for (x, y, w, h) in faces[:2]:
         serial, conf = recognizer.predict(gray_img[y:y+h, x:x+w])
-        if conf < 65:  # LBPH confidence threshold (lower is better match)
+        if conf < 65:  # LBPH threshold
             match = df[df["Serial No"] == serial]
             if not match.empty:
                 name = str(match.iloc[0]["Student Name"]).strip()
                 sid = str(match.iloc[0]["Student ID"]).strip()
-                match_pct = max(10, min(99, int(100 - conf)))
+                match_pct = max(15, min(99, int(100 - conf)))
                 results.append({"x": x, "y": y, "w": w, "h": h, "name": name, "id": sid, "confidence": match_pct, "status": "VERIFIED"})
                 continue
-        # If not verified
-        results.append({"x": x, "y": y, "w": w, "h": h, "name": "Unknown Person", "id": "N/A", "confidence": 0, "status": "UNRECOGNIZED"})
+        results.append({"x": x, "y": y, "w": w, "h": h, "name": "Unknown", "id": "N/A", "confidence": 0, "status": "UNRECOGNIZED"})
 
     return faces, results
 
@@ -144,17 +137,15 @@ def mark_attendance(sid, name):
     now_time = datetime.datetime.now().strftime("%H:%M:%S")
     file = os.path.join(ATTENDANCE_DIR, f"Attendance_{today}.csv")
     exists = os.path.isfile(file)
+    already_logged = False
 
-    # Avoid duplicate entry within the last 60 seconds for same student
     if exists:
         try:
             curr_df = pd.read_csv(file)
             if not curr_df.empty:
-                last_entries = curr_df[curr_df["ID"].astype(str) == str(sid)]
-                if not last_entries.empty:
-                    last_time_str = str(last_entries.iloc[-1]["Time"])
-                    # If already marked today, still return success
-                    pass
+                matches = curr_df[curr_df["ID"].astype(str) == str(sid)]
+                if not matches.empty:
+                    already_logged = True
         except Exception:
             pass
 
@@ -163,6 +154,8 @@ def mark_attendance(sid, name):
         if not exists:
             writer.writerow(["ID", "Name", "Date", "Time"])
         writer.writerow([sid, name, today, now_time])
+        
+    return already_logged, now_time
 
 def load_attendance_today():
     today = datetime.datetime.now().strftime("%d-%m-%Y")
@@ -179,574 +172,598 @@ def load_attendance_today():
     return pd.DataFrame()
 
 # ─────────────────────────────────────────────────────────────
-# PROFESSIONAL ENTERPRISE STYLING (CSS)
+# MODERN LIGHT SAAS CSS STYLING
 # ─────────────────────────────────────────────────────────────
 st.markdown("""
 <style>
-    /* Global Reset & Typography */
-    @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;600&display=swap');
     
     html, body, [class*="css"] {
-        font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: #0f172a;
+    }
+    
+    /* App background */
+    .stApp {
+        background-color: #f8fafc;
     }
 
-    /* Top App Navbar */
-    .app-navbar {
+    /* Top Navigation Header */
+    .saas-header {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        background: #0d1117;
-        padding: 1.25rem 1.75rem;
+        background: #ffffff;
+        padding: 1.15rem 1.75rem;
         border-radius: 14px;
-        border: 1px solid #30363d;
-        margin-bottom: 1.5rem;
-        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+        border: 1px solid #e2e8f0;
+        margin-bottom: 1.25rem;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px 0 rgba(0, 0, 0, 0.03);
     }
-    .brand-section {
+    .brand-group {
         display: flex;
         align-items: center;
         gap: 12px;
     }
-    .brand-logo-icon {
-        background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
-        color: white;
-        font-size: 20px;
+    .brand-icon-box {
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+        color: #ffffff;
+        font-size: 19px;
         font-weight: 800;
-        width: 42px;
-        height: 42px;
+        width: 44px;
+        height: 44px;
         display: flex;
         align-items: center;
         justify-content: center;
         border-radius: 10px;
-        box-shadow: 0 0 15px rgba(59, 130, 246, 0.4);
+        box-shadow: 0 4px 10px rgba(37, 99, 235, 0.25);
     }
-    .brand-name {
+    .brand-title {
         font-size: 1.35rem;
         font-weight: 800;
-        color: #f0f6fc;
-        letter-spacing: -0.02em;
+        color: #0f172a;
         margin: 0;
+        letter-spacing: -0.025em;
         line-height: 1.2;
     }
-    .brand-subtitle {
-        font-size: 0.8rem;
-        color: #8b949e;
+    .brand-desc {
+        font-size: 0.82rem;
+        color: #64748b;
         margin: 0;
         font-weight: 500;
     }
-    .system-status-badge {
+    .status-capsule {
         display: flex;
         align-items: center;
-        gap: 8px;
-        background: #161b22;
-        padding: 6px 14px;
-        border-radius: 20px;
-        border: 1px solid #30363d;
-        font-size: 0.82rem;
-        color: #c9d1d9;
+        gap: 10px;
+        background: #f1f5f9;
+        padding: 7px 16px;
+        border-radius: 30px;
+        border: 1px solid #e2e8f0;
+        font-size: 0.84rem;
+        color: #334155;
         font-weight: 600;
     }
-    .pulse-dot {
-        width: 8px;
-        height: 8px;
+    .dot-live {
+        width: 9px;
+        height: 9px;
         background: #10b981;
         border-radius: 50%;
-        box-shadow: 0 0 8px #10b981;
+        box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2);
     }
 
-    /* Modern Metric Cards */
-    .kpi-card {
-        background: #161b22;
-        border: 1px solid #30363d;
-        border-radius: 12px;
-        padding: 1.25rem 1.5rem;
-        transition: transform 0.15s ease, border-color 0.15s ease;
-    }
-    .kpi-card:hover {
-        border-color: #58a6ff;
-        transform: translateY(-2px);
-    }
-    .kpi-label {
-        font-size: 0.75rem;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        color: #8b949e;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-    }
-    .kpi-value {
-        font-size: 2.2rem;
-        font-weight: 800;
-        color: #ffffff;
-        line-height: 1;
-        margin-bottom: 0.25rem;
-    }
-    .kpi-subtext {
-        font-size: 0.8rem;
-        color: #8b949e;
-        font-weight: 500;
-    }
-
-    /* Verification Status Banner */
-    .verify-banner-success {
-        background: linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.05) 100%);
-        border: 1px solid #10b981;
-        border-radius: 12px;
-        padding: 1.5rem;
-        color: #ffffff;
-        margin-top: 0.5rem;
-    }
-    .verify-banner-warning {
-        background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(185, 28, 28, 0.05) 100%);
-        border: 1px solid #ef4444;
-        border-radius: 12px;
-        padding: 1.5rem;
-        color: #ffffff;
-        margin-top: 0.5rem;
-    }
-    .verify-badge-pill {
-        display: inline-block;
-        font-size: 0.72rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        padding: 4px 10px;
-        border-radius: 6px;
-        background: #10b981;
-        color: #0d1117;
-        margin-bottom: 0.75rem;
-    }
-    .verify-badge-unreg {
-        display: inline-block;
-        font-size: 0.72rem;
-        font-weight: 800;
-        text-transform: uppercase;
-        letter-spacing: 0.08em;
-        padding: 4px 10px;
-        border-radius: 6px;
-        background: #ef4444;
-        color: #ffffff;
-        margin-bottom: 0.75rem;
-    }
-    .student-display-name {
-        font-size: 1.6rem;
-        font-weight: 800;
-        color: #ffffff;
-        margin: 0 0 0.5rem 0;
-    }
-    .meta-grid {
-        display: grid;
-        grid-template-columns: repeat(3, 1fr);
-        gap: 12px;
-        background: rgba(0, 0, 0, 0.3);
-        padding: 12px;
-        border-radius: 8px;
-        margin-top: 1rem;
-    }
-    .meta-item-label {
-        font-size: 0.68rem;
-        text-transform: uppercase;
-        letter-spacing: 0.06em;
-        color: #8b949e;
-        font-weight: 700;
-    }
-    .meta-item-value {
-        font-size: 0.95rem;
-        color: #f0f6fc;
-        font-weight: 600;
-        font-family: 'JetBrains Mono', monospace;
-    }
-
-    /* Section Subheadings */
-    .section-title {
-        font-size: 1.15rem;
-        font-weight: 700;
-        color: #f0f6fc;
-        margin-bottom: 0.25rem;
-    }
-    .section-desc {
-        font-size: 0.85rem;
-        color: #8b949e;
-        margin-bottom: 1.25rem;
-    }
-
-    /* Tabs Customization (Segmented Control) */
+    /* Light Theme Tabs (Segmented Controls) */
     .stTabs [data-baseweb="tab-list"] {
-        gap: 6px;
-        background-color: #161b22;
-        padding: 6px;
+        gap: 8px;
+        background-color: #f1f5f9;
+        padding: 5px;
         border-radius: 12px;
-        border: 1px solid #30363d;
+        border: 1px solid #e2e8f0;
         margin-bottom: 1.5rem;
     }
     .stTabs [data-baseweb="tab"] {
-        height: 42px;
+        height: 40px;
         padding: 0 22px;
         border-radius: 8px;
-        color: #8b949e;
+        color: #64748b;
         font-weight: 600;
         font-size: 0.88rem;
-        border: none;
         background: transparent;
+        border: none;
         transition: all 0.15s ease;
     }
     .stTabs [data-baseweb="tab"]:hover {
-        color: #f0f6fc;
-        background-color: rgba(255, 255, 255, 0.04);
+        color: #0f172a;
+        background-color: rgba(255, 255, 255, 0.6);
     }
     .stTabs [aria-selected="true"] {
-        background-color: #21262d !important;
-        color: #58a6ff !important;
+        background-color: #ffffff !important;
+        color: #2563eb !important;
         font-weight: 700;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.06) !important;
     }
 
-    /* Standby Card */
-    .standby-card {
-        border: 1px dashed #30363d;
-        background: #161b22;
+    /* Light KPI Cards */
+    .card-kpi {
+        background: #ffffff;
+        border: 1px solid #e2e8f0;
         border-radius: 12px;
-        padding: 2.5rem 1.5rem;
-        text-align: center;
-        color: #8b949e;
+        padding: 1.35rem 1.5rem;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+        transition: transform 0.15s ease, box-shadow 0.15s ease;
     }
-    .standby-icon {
-        font-size: 2.5rem;
-        margin-bottom: 0.75rem;
-        opacity: 0.6;
+    .card-kpi:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+        border-color: #cbd5e1;
+    }
+    .card-kpi-label {
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        color: #64748b;
+        font-weight: 700;
+        margin-bottom: 0.4rem;
+    }
+    .card-kpi-val {
+        font-size: 2.2rem;
+        font-weight: 800;
+        color: #0f172a;
+        line-height: 1.1;
+        margin-bottom: 0.25rem;
+    }
+    .card-kpi-sub {
+        font-size: 0.8rem;
+        color: #64748b;
+        font-weight: 500;
     }
 
-    /* Clean Buttons */
+    /* Dynamic Verification Banner (Clean Light Cards) */
+    .banner-success-card {
+        background: #f0fdf4;
+        border: 1.5px solid #86efac;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(34, 197, 94, 0.08);
+    }
+    .badge-success-pill {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: #10b981;
+        color: #ffffff;
+        margin-bottom: 0.75rem;
+    }
+    .banner-warning-card {
+        background: #fff1f2;
+        border: 1.5px solid #fecdd3;
+        border-radius: 12px;
+        padding: 1.5rem;
+        box-shadow: 0 2px 8px rgba(244, 63, 94, 0.08);
+    }
+    .badge-warning-pill {
+        display: inline-block;
+        font-size: 0.72rem;
+        font-weight: 800;
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+        padding: 4px 10px;
+        border-radius: 6px;
+        background: #e11d48;
+        color: #ffffff;
+        margin-bottom: 0.75rem;
+    }
+    .student-title-lg {
+        font-size: 1.7rem;
+        font-weight: 800;
+        color: #0f172a;
+        margin: 0 0 0.5rem 0;
+    }
+    .meta-row-light {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 12px;
+        background: #ffffff;
+        padding: 14px;
+        border-radius: 8px;
+        border: 1px solid #dcfce7;
+        margin-top: 1rem;
+    }
+    .meta-label-light {
+        font-size: 0.68rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: #64748b;
+        font-weight: 700;
+    }
+    .meta-val-light {
+        font-size: 1rem;
+        color: #0f172a;
+        font-weight: 700;
+        font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* Standby Light Card */
+    .standby-card-light {
+        border: 1.5px dashed #cbd5e1;
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 2.75rem 1.5rem;
+        text-align: center;
+        color: #64748b;
+    }
+
+    /* Section Typography */
+    .section-headline {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #0f172a;
+        margin-bottom: 0.2rem;
+    }
+    .section-caption {
+        font-size: 0.84rem;
+        color: #64748b;
+        margin-bottom: 1.25rem;
+    }
+
+    /* Primary Buttons */
     div.stButton > button:first-child {
+        background: #2563eb;
+        color: #ffffff;
+        border: none;
         border-radius: 8px;
         font-weight: 600;
-        padding: 0.5rem 1.25rem;
-        border: 1px solid #30363d;
+        padding: 0.55rem 1.35rem;
+        box-shadow: 0 1px 3px rgba(37, 99, 235, 0.2);
+        transition: background 0.15s ease, transform 0.1s ease;
+    }
+    div.stButton > button:first-child:hover {
+        background: #1d4ed8;
+        color: #ffffff;
+        transform: translateY(-1px);
+    }
+    
+    /* Secondary/Reset Buttons */
+    div.stButton > button[kind="secondary"] {
+        background: #ffffff;
+        color: #334155;
+        border: 1px solid #cbd5e1;
     }
 </style>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
-# TOP APP NAVBAR (Clean & Professional)
+# TOP LIGHT NAVBAR WITH REAL-TIME CLOCK & STATUS
 # ─────────────────────────────────────────────────────────────
-today_date_str = datetime.datetime.now().strftime("%d %b %Y")
-now_time_str = datetime.datetime.now().strftime("%H:%M:%S")
+today_date_str = datetime.datetime.now().strftime("%d %B %Y")
+now_time_str = datetime.datetime.now().strftime("%I:%M %p")
 
 st.markdown(f"""
-<div class="app-navbar">
-    <div class="brand-section">
-        <div class="brand-logo-icon">FA</div>
+<div class="saas-header">
+    <div class="brand-group">
+        <div class="brand-icon-box">FA</div>
         <div>
-            <h1 class="brand-name">FaceAttend Portal</h1>
-            <p class="brand-subtitle">Automated Biometric Attendance & Identity Verification</p>
+            <h1 class="brand-title">FaceAttend AI</h1>
+            <p class="brand-desc">Enterprise Biometric Attendance & Identity Verification</p>
         </div>
     </div>
-    <div class="system-status-badge">
-        <span class="pulse-dot"></span>
-        <span>Online</span>
-        <span style="color:#484f58; margin: 0 4px;">|</span>
-        <span style="font-family:'JetBrains Mono',monospace;">{today_date_str}</span>
+    <div class="status-capsule">
+        <span class="dot-live"></span>
+        <span>System Active</span>
+        <span style="color:#cbd5e1;">|</span>
+        <span style="font-family:'JetBrains Mono',monospace; color:#0f172a;">{today_date_str}</span>
     </div>
 </div>
 """, unsafe_allow_html=True)
 
 # ─────────────────────────────────────────────────────────────
-# MAIN TABS INTERFACE (Clean Segmented Layout)
+# DYNAMIC KPI SUMMARY BANNER (Always Visible at a Glance)
 # ─────────────────────────────────────────────────────────────
-tab_attend, tab_register, tab_records, tab_analytics = st.tabs([
-    "📸 Live Attendance",
+total_enrolled = total_registrations()
+today_attendance_df = load_attendance_today()
+today_count = len(today_attendance_df)
+attendance_rate_val = (today_count / total_enrolled * 100) if total_enrolled > 0 else 0
+model_status_text = "LBPH Active" if os.path.isfile(TRAINER_YML) else "Pending Training"
+
+kpi_col1, kpi_col2, kpi_col3, kpi_col4 = st.columns(4)
+
+with kpi_col1:
+    st.markdown(f"""
+    <div class="card-kpi">
+        <div class="card-kpi-label">Total Students</div>
+        <div class="card-kpi-val">{total_enrolled}</div>
+        <div class="card-kpi-sub">Enrolled Profiles</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with kpi_col2:
+    st.markdown(f"""
+    <div class="card-kpi">
+        <div class="card-kpi-label">Checked-In Today</div>
+        <div class="card-kpi-val" style="color:#2563eb;">{today_count}</div>
+        <div class="card-kpi-sub">Verified Records</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with kpi_col3:
+    st.markdown(f"""
+    <div class="card-kpi">
+        <div class="card-kpi-label">Today's Turnout</div>
+        <div class="card-kpi-val" style="color:#10b981;">{attendance_rate_val:.1f}%</div>
+        <div class="card-kpi-sub">Attendance Rate</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+with kpi_col4:
+    st.markdown(f"""
+    <div class="card-kpi">
+        <div class="card-kpi-label">Recognition Engine</div>
+        <div class="card-kpi-val" style="font-size:1.45rem; color:#059669;">{model_status_text}</div>
+        <div class="card-kpi-sub">Haar + LBPH Model</div>
+    </div>
+    """, unsafe_allow_html=True)
+
+st.markdown("<div style='height: 18px;'></div>", unsafe_allow_html=True)
+
+# ─────────────────────────────────────────────────────────────
+# TABS INTERFACE (Clean Segmented Light Layout)
+# ─────────────────────────────────────────────────────────────
+tab_scanner, tab_enroll, tab_logs, tab_students = st.tabs([
+    "📸 Live Attendance Scanner",
     "➕ Student Enrollment",
-    "📋 Daily Records",
-    "📊 System Analytics"
+    "📋 Today's Attendance Logs",
+    "👥 Student Directory & Records"
 ])
 
 # ═════════════════════════════════════════════════════════════
-# TAB 1: LIVE ATTENDANCE (Primary User Flow)
+# TAB 1: LIVE ATTENDANCE SCANNER
 # ═════════════════════════════════════════════════════════════
-with tab_attend:
-    # Pre-flight check
+with tab_scanner:
     if not os.path.isfile(TRAINER_YML) or not os.path.isfile(STUDENT_CSV):
-        st.warning("⚠️ No enrolled students or trained biometric model detected. Please complete **Student Enrollment** first.")
-    
-    col_cam, col_result = st.columns([1.15, 0.85], gap="large")
+        st.warning("⚠️ No facial biometric model found. Please enroll at least 1 student in the **Student Enrollment** tab.")
 
-    with col_cam:
-        st.markdown('<div class="section-title">Optical Biometric Scanner</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Align face within camera frame. Tap shutter to log attendance.</div>', unsafe_allow_html=True)
-        cam_input = st.camera_input("Scanner Feed", label_visibility="collapsed")
+    col_cam_box, col_verify_box = st.columns([1.1, 0.9], gap="large")
 
-    with col_result:
-        st.markdown('<div class="section-title">Verification Engine</div>', unsafe_allow_html=True)
-        st.markdown('<div class="section-desc">Real-time facial identity match and attendance record.</div>', unsafe_allow_html=True)
+    with col_cam_box:
+        st.markdown('<div class="section-headline">Optical Biometric Scanner</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-caption">Position face in center frame and click shutter to log attendance.</div>', unsafe_allow_html=True)
+        camera_frame = st.camera_input("Optical Scanner", label_visibility="collapsed")
 
-        if cam_input is not None:
-            img_arr = np.frombuffer(cam_input.getvalue(), np.uint8)
-            frame_bgr = cv2.imdecode(img_arr, cv2.IMREAD_COLOR)
+    with col_verify_box:
+        st.markdown('<div class="section-headline">Verification Result</div>', unsafe_allow_html=True)
+        st.markdown('<div class="section-caption">Automated face recognition and attendance logging.</div>', unsafe_allow_html=True)
+
+        if camera_frame is not None:
+            raw_bytes = np.frombuffer(camera_frame.getvalue(), np.uint8)
+            frame_bgr = cv2.imdecode(raw_bytes, cv2.IMREAD_COLOR)
             gray = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2GRAY)
 
-            faces_detected, results = recognize_primary_face(gray)
+            faces_found, parsed_results = recognize_primary_face(gray)
 
-            if len(faces_detected) == 0:
+            if len(faces_found) == 0:
                 st.markdown("""
-                <div class="verify-banner-warning">
-                    <span class="verify-badge-unreg">NO FACE DETECTED</span>
-                    <div class="student-display-name" style="font-size:1.25rem;">Camera Could Not Detect Face</div>
-                    <div style="color:#8b949e; font-size:0.85rem; margin-top:0.4rem;">
-                        Please ensure adequate frontal lighting and look directly into the camera.
+                <div class="banner-warning-card">
+                    <span class="badge-warning-pill">NO FACE DETECTED</span>
+                    <div class="student-title-lg" style="font-size:1.3rem;">Face Not Detected</div>
+                    <div style="color:#64748b; font-size:0.88rem; margin-top:0.4rem;">
+                        Please stand directly in front of the camera with adequate lighting and retake the photo.
                     </div>
                 </div>
                 """, unsafe_allow_html=True)
             else:
-                # Find if any verified face exists in results
-                verified_match = next((r for r in results if r["status"] == "VERIFIED"), None)
+                # Find the primary verified match
+                verified_profile = next((r for r in parsed_results if r["status"] == "VERIFIED"), None)
 
-                if verified_match:
-                    name = verified_match["name"]
-                    sid = verified_match["id"]
-                    conf = verified_match["confidence"]
-                    timestamp = datetime.datetime.now().strftime("%H:%M:%S")
-                    today_str = datetime.datetime.now().strftime("%d-%m-%Y")
+                if verified_profile:
+                    student_name = verified_profile["name"]
+                    student_id = verified_profile["id"]
+                    confidence_pct = verified_profile["confidence"]
+                    already_marked, log_time = mark_attendance(student_id, student_name)
 
-                    mark_attendance(sid, name)
+                    badge_text = "VERIFIED & LOGGED" if not already_marked else "VERIFIED (ALREADY RECORDED TODAY)"
 
                     st.markdown(f"""
-                    <div class="verify-banner-success">
-                        <span class="verify-badge-pill">IDENTITY VERIFIED & LOGGED</span>
-                        <div class="student-display-name">{name}</div>
-                        <div class="meta-grid">
+                    <div class="banner-success-card">
+                        <span class="badge-success-pill">{badge_text}</span>
+                        <div class="student-title-lg">{student_name}</div>
+                        <div class="meta-row-light">
                             <div>
-                                <div class="meta-item-label">Student ID</div>
-                                <div class="meta-item-value">{sid}</div>
+                                <div class="meta-label-light">Student ID</div>
+                                <div class="meta-val-light">{student_id}</div>
                             </div>
                             <div>
-                                <div class="meta-item-label">Timestamp</div>
-                                <div class="meta-item-value">{timestamp}</div>
+                                <div class="meta-label-light">Time Logged</div>
+                                <div class="meta-val-light">{log_time}</div>
                             </div>
                             <div>
-                                <div class="meta-item-label">Confidence</div>
-                                <div class="meta-item-value">{conf}%</div>
+                                <div class="meta-label-light">Match Confidence</div>
+                                <div class="meta-val-light" style="color:#10b981;">{confidence_pct}%</div>
                             </div>
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
+                    st.toast(f"✅ Attendance recorded for {student_name} ({student_id})")
                 else:
                     st.markdown("""
-                    <div class="verify-banner-warning">
-                        <span class="verify-badge-unreg">UNRECOGNIZED IDENTITY</span>
-                        <div class="student-display-name" style="font-size:1.25rem;">Student Not In Database</div>
-                        <div style="color:#8b949e; font-size:0.85rem; margin-top:0.4rem;">
+                    <div class="banner-warning-card">
+                        <span class="badge-warning-pill">UNRECOGNIZED IDENTITY</span>
+                        <div class="student-title-lg" style="font-size:1.3rem;">Student Not In Database</div>
+                        <div style="color:#64748b; font-size:0.88rem; margin-top:0.4rem;">
                             This face does not match any registered student profile. Please enroll via the Student Enrollment tab.
                         </div>
                     </div>
                     """, unsafe_allow_html=True)
         else:
             st.markdown("""
-            <div class="standby-card">
-                <div class="standby-icon">📷</div>
-                <div style="font-weight:600; color:#c9d1d9; margin-bottom:0.25rem;">Awaiting Shutter Capture</div>
-                <div style="font-size:0.82rem;">Allow browser camera access and click "Take photo" to authenticate.</div>
+            <div class="standby-card-light">
+                <div style="font-size:2.5rem; margin-bottom:0.75rem;">📷</div>
+                <div style="font-weight:700; color:#0f172a; font-size:1rem; margin-bottom:0.35rem;">Awaiting Shutter Capture</div>
+                <div style="font-size:0.85rem; color:#64748b;">Click "Take photo" on the camera feed to authenticate.</div>
             </div>
             """, unsafe_allow_html=True)
 
-    # Today's Live Attendance Feed
-    st.markdown("<div style='height: 25px;'></div>", unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Today’s Check-In Activity</div>', unsafe_allow_html=True)
-    today_df = load_attendance_today()
-
-    if not today_df.empty:
-        st.dataframe(today_df, use_container_width=True, hide_index=True)
-        csv_bytes = today_df.to_csv(index=False).encode("utf-8")
+    # Real-Time Check-In Feed
+    st.markdown("<div style='height: 30px;'></div>", unsafe_allow_html=True)
+    st.markdown('<div class="section-headline">Real-Time Check-In Stream</div>', unsafe_allow_html=True)
+    
+    current_log_df = load_attendance_today()
+    if not current_log_df.empty:
+        st.dataframe(current_log_df.iloc[::-1], use_container_width=True, hide_index=True)
+        csv_download_bytes = current_log_df.to_csv(index=False).encode("utf-8")
         st.download_button(
             label="📥 Export Today's Attendance (CSV)",
-            data=csv_bytes,
+            data=csv_download_bytes,
             file_name=f"Attendance_{datetime.datetime.now().strftime('%d_%m_%Y')}.csv",
-            mime="text/csv",
+            mime="text/csv"
         )
     else:
-        st.info("No attendance records logged for today yet. Use the scanner above to mark check-in.")
+        st.info("No check-ins logged for today yet. When students scan their face, records will appear here dynamically.")
 
 # ═════════════════════════════════════════════════════════════
-# TAB 2: STUDENT ENROLLMENT (Registration)
+# TAB 2: STUDENT ENROLLMENT (Interactive Registration)
 # ═════════════════════════════════════════════════════════════
-with tab_register:
-    st.markdown('<div class="section-title">Student Biometric Enrollment</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-desc">Register new student credentials and capture facial training samples.</div>', unsafe_allow_html=True)
+with tab_enroll:
+    st.markdown('<div class="section-headline">Biometric Registration & Model Training</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-caption">Add new student profiles and train OpenCV facial recognition model.</div>', unsafe_allow_html=True)
 
-    col_form, col_capture = st.columns([1, 1], gap="large")
+    col_details, col_phototake = st.columns([1, 1], gap="large")
 
-    with col_form:
-        st.markdown("##### 1. Student Credentials")
-        new_id = st.text_input("Student ID / Roll Number", placeholder="e.g. 101, CS2024", key="enroll_id")
-        new_name = st.text_input("Full Legal Name", placeholder="e.g. Bharat Dewangan", key="enroll_name")
-        samples_target = st.slider("Facial Samples to Collect", min_value=3, max_value=8, value=5, help="More samples improve angle tolerance.")
+    with col_details:
+        st.markdown("##### 1. Student Information")
+        new_sid = st.text_input("Student ID / Roll Number", placeholder="e.g. 101, CS-2024", key="form_sid")
+        new_sname = st.text_input("Full Legal Name", placeholder="e.g. Bharat Dewangan", key="form_sname")
+        target_sample_count = st.slider("Facial Training Samples", min_value=3, max_value=8, value=5, help="5 samples give the best balance of speed and accuracy.")
 
-    with col_capture:
+    with col_phototake:
         st.markdown("##### 2. Face Sample Capture")
-        if not new_id or not new_name:
-            st.info("Fill in Student ID and Name on the left to activate face capture.")
+        if not new_sid or not new_sname:
+            st.info("Please fill in Student ID and Full Name on the left to activate face capture.")
         else:
-            if "enroll_count" not in st.session_state:
-                st.session_state.enroll_count = 0
+            if "samples_taken" not in st.session_state:
+                st.session_state.samples_taken = 0
 
-            clean_name = "".join(c for c in new_name if c.isalnum() or c in (" ", "_", "-")).strip()
+            clean_name = "".join(c for c in new_sname if c.isalnum() or c in (" ", "_", "-")).strip()
 
-            st.caption(f"Progress: {st.session_state.enroll_count} of {samples_target} samples collected")
-            progress_val = min(1.0, st.session_state.enroll_count / samples_target)
-            st.progress(progress_val)
+            st.caption(f"Progress: {st.session_state.samples_taken} of {target_sample_count} photos captured")
+            dyn_progress = min(1.0, st.session_state.samples_taken / target_sample_count)
+            st.progress(dyn_progress)
 
-            sample_img = st.camera_input(f"Capture Sample #{st.session_state.enroll_count + 1}", key=f"sample_{st.session_state.enroll_count}")
+            sample_capture = st.camera_input(f"Capture Sample #{st.session_state.samples_taken + 1}", key=f"enroll_cam_{st.session_state.samples_taken}")
 
-            if sample_img is not None:
-                img_bytes = np.frombuffer(sample_img.getvalue(), np.uint8)
-                frame_gray = cv2.imdecode(img_bytes, cv2.IMREAD_GRAYSCALE)
+            if sample_capture is not None:
+                capture_bytes = np.frombuffer(sample_capture.getvalue(), np.uint8)
+                frame_gray = cv2.imdecode(capture_bytes, cv2.IMREAD_GRAYSCALE)
                 det = detector()
-                faces = det.detectMultiScale(frame_gray, 1.25, 5, minSize=(80, 80))
+                faces_in_sample = det.detectMultiScale(frame_gray, 1.25, 5, minSize=(80, 80))
 
-                if len(faces) == 0:
+                if len(faces_in_sample) == 0:
                     st.error("Face not clearly detected. Ensure proper lighting and center your face.")
                 else:
-                    serial_num = next_serial()
-                    # Save largest detected face
-                    faces_sorted = sorted(faces, key=lambda f: f[2] * f[3], reverse=True)
+                    serial_id = next_serial()
+                    faces_sorted = sorted(faces_in_sample, key=lambda f: f[2] * f[3], reverse=True)
                     x, y, w, h = faces_sorted[0]
-                    sample_idx = st.session_state.enroll_count + 1
-                    fname = f"{clean_name}.{serial_num}.{new_id}.{sample_idx}.jpg"
-                    fpath = os.path.join(TRAINING_DIR, " " + fname)
-                    cv2.imwrite(fpath, frame_gray[y:y+h, x:x+w])
+                    sample_no = st.session_state.samples_taken + 1
+                    file_name = f"{clean_name}.{serial_id}.{new_sid}.{sample_no}.jpg"
+                    file_target = os.path.join(TRAINING_DIR, " " + file_name)
+                    cv2.imwrite(file_target, frame_gray[y:y+h, x:x+w])
 
-                    st.session_state.enroll_count += 1
-                    st.success(f"Sample {sample_idx} captured successfully.")
+                    st.session_state.samples_taken += 1
+                    st.success(f"Sample {sample_no} saved successfully.")
 
-            if st.session_state.enroll_count >= samples_target:
+            if st.session_state.samples_taken >= target_sample_count:
                 st.markdown("<div style='height:12px;'></div>", unsafe_allow_html=True)
-                col_btn1, col_btn2 = st.columns(2)
-                with col_btn1:
+                btn_c1, btn_c2 = st.columns(2)
+                with btn_c1:
                     if st.button("💾 Enroll & Train Biometric Model", type="primary", use_container_width=True):
-                        serial_num = next_serial()
-                        save_student(serial_num, new_id, new_name)
-                        with st.spinner("Training facial recognition network..."):
-                            success, trained_count = train_model()
+                        serial_id = next_serial()
+                        save_student(serial_id, new_sid, new_sname)
+                        with st.spinner("Training facial recognition network with new biometric data..."):
+                            success, trained_total = train_model()
                         if success:
                             st.balloons()
-                            st.success(f"Enrollment Complete! {new_name} ({new_id}) registered across {trained_count} profiles.")
-                            st.session_state.enroll_count = 0
+                            st.success(f"Enrollment Complete! {new_sname} ({new_sid}) registered across {trained_total} biometric profiles.")
+                            st.session_state.samples_taken = 0
                         else:
                             st.error("Model training failed. Please re-capture samples.")
-                with col_btn2:
-                    if st.button("🔄 Reset Form", use_container_width=True):
-                        st.session_state.enroll_count = 0
+                with btn_c2:
+                    if st.button("🔄 Reset / Enroll Another", use_container_width=True):
+                        st.session_state.samples_taken = 0
                         st.rerun()
 
 # ═════════════════════════════════════════════════════════════
-# TAB 3: ATTENDANCE RECORDS (History & Audit)
+# TAB 3: TODAY'S ATTENDANCE LOGS
 # ═════════════════════════════════════════════════════════════
-with tab_records:
-    st.markdown('<div class="section-title">Historical Attendance Log</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-desc">Search, filter, and export past attendance records.</div>', unsafe_allow_html=True)
+with tab_logs:
+    st.markdown('<div class="section-headline">Daily Attendance Log</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-caption">Comprehensive real-time view of all students marked present today.</div>', unsafe_allow_html=True)
 
-    csv_files = sorted(
+    logs_df = load_attendance_today()
+    if not logs_df.empty:
+        c_count, c_export = st.columns([1, 1])
+        with c_count:
+            st.markdown(f"**Total Records:** `{len(logs_df)} check-ins logged today`")
+        with c_export:
+            csv_data = logs_df.to_csv(index=False).encode("utf-8")
+            st.download_button(
+                label="📥 Download Daily CSV",
+                data=csv_data,
+                file_name=f"Attendance_{datetime.datetime.now().strftime('%d_%m_%Y')}.csv",
+                mime="text/csv",
+                use_container_width=True
+            )
+
+        st.dataframe(logs_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("No attendance records logged for today yet.")
+
+# ═════════════════════════════════════════════════════════════
+# TAB 4: STUDENT DIRECTORY & HISTORICAL ARCHIVE
+# ═════════════════════════════════════════════════════════════
+with tab_students:
+    st.markdown('<div class="section-headline">Enrolled Student Directory</div>', unsafe_allow_html=True)
+    st.markdown('<div class="section-caption">Master database of all registered students with instant dynamic search.</div>', unsafe_allow_html=True)
+
+    master_df = load_students()
+    if not master_df.empty:
+        search_query = st.text_input("🔍 Dynamic Search (Search by Name or ID)", placeholder="Type student name or ID...", key="master_search")
+        if search_query:
+            matched_df = master_df[
+                master_df["Student Name"].astype(str).str.contains(search_query, case=False, na=False) |
+                master_df["Student ID"].astype(str).str.contains(search_query, case=False, na=False)
+            ]
+            st.dataframe(matched_df, use_container_width=True, hide_index=True)
+        else:
+            st.dataframe(master_df, use_container_width=True, hide_index=True)
+    else:
+        st.info("No enrolled students in the directory.")
+
+    st.markdown("<div style='height:25px;'></div>", unsafe_allow_html=True)
+    st.markdown('<div class="section-headline">Historical Date Archive</div>', unsafe_allow_html=True)
+
+    all_csv_history = sorted(
         [f for f in os.listdir(ATTENDANCE_DIR) if f.endswith(".csv")],
         reverse=True
     ) if os.path.isdir(ATTENDANCE_DIR) else []
 
-    if not csv_files:
-        st.info("No historical attendance files found.")
-    else:
-        col_sel, col_exp = st.columns([1, 1], gap="medium")
-        with col_sel:
-            selected_file = st.selectbox("Select Attendance Date", csv_files)
-
-        if selected_file:
-            hist_df = pd.read_csv(os.path.join(ATTENDANCE_DIR, selected_file))
-            hist_df = hist_df.loc[:, ~hist_df.columns.str.contains('^Unnamed', na=False)]
-            hist_df = hist_df.loc[:, [c for c in hist_df.columns if str(c).strip() != '']]
-            hist_df.columns = hist_df.columns.str.strip()
-
-            with col_exp:
-                st.caption(f"Total entries: {len(hist_df)}")
-                csv_download = hist_df.to_csv(index=False).encode("utf-8")
-                st.download_button(
-                    label=f"📥 Download {selected_file}",
-                    data=csv_download,
-                    file_name=selected_file,
-                    mime="text/csv",
-                    use_container_width=True
-                )
-
-            st.dataframe(hist_df, use_container_width=True, hide_index=True)
-
-# ═════════════════════════════════════════════════════════════
-# TAB 4: SYSTEM ANALYTICS & DIRECTORY
-# ═════════════════════════════════════════════════════════════
-with tab_analytics:
-    st.markdown('<div class="section-title">System Overview & Metrics</div>', unsafe_allow_html=True)
-    st.markdown('<div class="section-desc">Live statistics, database integrity, and enrolled student directory.</div>', unsafe_allow_html=True)
-
-    total_stud = total_registrations()
-    today_count = len(load_attendance_today())
-    attendance_rate = f"{(today_count / total_stud * 100):.1f}%" if total_stud > 0 else "0%"
-    model_ready = "Trained & Active" if os.path.isfile(TRAINER_YML) else "Pending Training"
-
-    m1, m2, m3, m4 = st.columns(4)
-
-    with m1:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-label">Total Enrolled</div>
-            <div class="kpi-value">{total_stud}</div>
-            <div class="kpi-subtext">Registered Students</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with m2:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-label">Checked-In Today</div>
-            <div class="kpi-value">{today_count}</div>
-            <div class="kpi-subtext">Present Today</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with m3:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-label">Turnout Rate</div>
-            <div class="kpi-value">{attendance_rate}</div>
-            <div class="kpi-subtext">Today's Attendance %</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    with m4:
-        st.markdown(f"""
-        <div class="kpi-card">
-            <div class="kpi-label">Biometric Model</div>
-            <div class="kpi-value" style="font-size:1.35rem; color:#10b981;">{model_ready}</div>
-            <div class="kpi-subtext">OpenCV LBPH Engine</div>
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown("<div style='height:25px;'></div>", unsafe_allow_html=True)
-    st.markdown('<div class="section-title">Enrolled Student Directory</div>', unsafe_allow_html=True)
-    all_students_df = load_students()
-    if not all_students_df.empty:
-        search_term = st.text_input("🔍 Search Student Directory (Filter by Name or ID)", placeholder="Type to filter...")
-        if search_term:
-            filtered_df = all_students_df[
-                all_students_df["Student Name"].astype(str).str.contains(search_term, case=False, na=False) |
-                all_students_df["Student ID"].astype(str).str.contains(search_term, case=False, na=False)
-            ]
-            st.dataframe(filtered_df, use_container_width=True, hide_index=True)
-        else:
-            st.dataframe(all_students_df, use_container_width=True, hide_index=True)
-    else:
-        st.info("Student directory is empty.")
+    if all_csv_history:
+        date_pick = st.selectbox("Select Past Attendance Date", all_csv_history)
+        if date_pick:
+            archive_df = pd.read_csv(os.path.join(ATTENDANCE_DIR, date_pick))
+            archive_df = archive_df.loc[:, ~archive_df.columns.str.contains('^Unnamed', na=False)]
+            archive_df = archive_df.loc[:, [c for c in archive_df.columns if str(c).strip() != '']]
+            archive_df.columns = archive_df.columns.str.strip()
+            st.dataframe(archive_df, use_container_width=True, hide_index=True)
 
 # ─────────────────────────────────────────────────────────────
 # FOOTER
 # ─────────────────────────────────────────────────────────────
-st.markdown("<div style='height:40px;'></div>", unsafe_allow_html=True)
+st.markdown("<div style='height:45px;'></div>", unsafe_allow_html=True)
 st.markdown("""
-<div style="text-align:center; color:#484f58; font-size:0.75rem; border-top:1px solid #21262d; padding-top:1.5rem;">
-    FaceAttend AI • Biometric Identity & Attendance Architecture • Powered by OpenCV LBPH & Streamlit
+<div style="text-align:center; color:#94a3b8; font-size:0.8rem; border-top:1px solid #e2e8f0; padding-top:1.5rem;">
+    FaceAttend AI • Enterprise Biometric Attendance Architecture • Powered by OpenCV LBPH & Streamlit
 </div>
 """, unsafe_allow_html=True)
